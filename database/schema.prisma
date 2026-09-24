@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  SELLER
+  ADMIN
+}
+
+enum PetCategory {
+  DOG
+  CAT
+  BIRD
+  SMALL_PET
+}
+
+enum ListingType {
+  SALE
+  ADOPTION
+  REHOME
+}
+
+enum PetStatus {
+  PENDING
+  ACTIVE
+  RESERVED
+  SOLD
+  ADOPTED
+  REJECTED
+  ARCHIVED
+}
+
+model User {
+  id               String   @id @default(uuid())
+  name             String
+  email            String   @unique
+  phone            String?
+  passwordHash     String
+  profileImage     String?
+  district         String?
+  role             Role     @default(USER)
+  isVerifiedSeller Boolean  @default(false)
+  status           String   @default("ACTIVE")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  pets             Pet[]
+  favorites        Favorite[]
+}
+
+model Pet {
+  id                 String      @id @default(uuid())
+  sellerId           String
+  name               String
+  category           PetCategory
+  species            String?
+  breed              String?
+  gender             String?
+  age                Float?
+  ageUnit            String      @default("MONTHS")
+  price              Float?
+  district           String
+  area               String?
+  description        String?
+  listingType        ListingType
+  vaccinated         Boolean     @default(false)
+  vaccinationDetails String?
+  healthStatus       String?
+  status             PetStatus   @default(PENDING)
+  featured           Boolean     @default(false)
+  views              Int         @default(0)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  seller             User        @relation(fields: [sellerId], references: [id])
+  images             PetImage[]
+  favorites          Favorite[]
+}
+
+model PetImage {
+  id        String   @id @default(uuid())
+  petId     String
+  url       String
+  storageKey String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  petId     String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pet       Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, petId])
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  topic     String
+  message   String
+  status    String   @default("UNREAD")
+  createdAt DateTime @default(now())
+}
+
+enum ReportType {
+  LOST
+  FOUND
+}
+
+model LostFoundReport {
+  id              String     @id @default(uuid())
+  reportType      ReportType
+  petName         String?
+  species         String
+  description     String
+  lastSeenLocation String
+  lastSeenDate    DateTime
+  contactName     String
+  contactPhone    String
+  imageUrl        String?
+  status          String     @default("OPEN")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
