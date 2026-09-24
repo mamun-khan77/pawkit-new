@@ -34,6 +34,11 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.json({ success: true, message: 'Pawkit API is running!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Only listen if not running on Vercel
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+export default app;
